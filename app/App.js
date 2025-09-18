@@ -1,5 +1,5 @@
+import React, { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { use, useState } from "react";
 import {
   Alert,
   Image,
@@ -9,8 +9,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  useState,
-  useEffect,
   Keyboard
 } from "react-native";
 import styles from "./styles";
@@ -110,7 +108,8 @@ export default function App() {
       return;
     }
 
-    let newRegister = (personalCode == undefined);
+  // If there's no personalCode (empty string), treat as a new register
+  let newRegister = !personalCode || personalCode.toString().trim() === "";
 
     let obj = {
       personalCode: newRegister ? createUnicPersonalCode() : personalCode,
@@ -159,6 +158,7 @@ export default function App() {
       setFullName(register.fullName);
       setEmail(register.email);
       setPassword(register.password);
+      setConfirmPassword(register.password);
     }
 
     console.log(register);
@@ -217,80 +217,66 @@ export default function App() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-      <View style={styles.container}>
-        <Text style={styles.tituloPrincipal}>
-          Create a user registration, persisting data on the device
-        </Text>
-        <View style={styles.card}>
-          {/* Personal Code */}
-          <Text style={styles.label}>Code</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter code"
-            placeholderTextColor="#b5c0d0"
-            keyboardType="numeric"
-            value={personalCode}
-            onChangeText={setPersonalCode}
-          />
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter name"
-            placeholderTextColor="#b5c0d0"
-            value={fullName}
-            onChangeText={setFullName}
-          />
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter email"
-            placeholderTextColor="#b5c0d0"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <View style={styles.formRow}>
-            <View style={styles.formCol}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="****"
-                placeholderTextColor="#b5c0d0"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
-            </View>
-            <View style={styles.formCol}>
-              <Text style={styles.label}>Confirm password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="****"
-                placeholderTextColor="#b5c0d0"
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-              />
-            </View>
-          </View>
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.button} onPress={save}>
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={load}>
-              <Text style={styles.buttonText}>Load</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.clearButtonWrapper}>
-            <TouchableOpacity onPress={clearFields}>
-              <Text style={[styles.buttonText, { color: '#5e60ce', fontSize: 18, textShadowColor: 'transparent' }]}>Clear</Text>
-            </TouchableOpacity>
-          </View>
+    <View style={styles.container}>
+      <Text style={styles.tituloPrincipal}>Agenda de Contatos - v1.0</Text>
+      <Text />
+      <Text />
+
+      <View style={[styles.card, { width: '92%', paddingVertical: 18 }]}>        
+        <Text style={styles.label}>Nome</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={setFullName}
+          value={fullName}
+        />
+
+        <Text style={styles.label}>Telefone</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={setEmail}
+          value={email}
+          keyboardType='phone-pad'
+        />
+
+        <View style={[styles.buttonRow, { marginTop: 8 }]}>          
+          <TouchableOpacity style={styles.button} onPress={save}>
+            <Text style={styles.buttonText}>Salvar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={clearFields}>
+            <Text style={styles.buttonText}>Cancelar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={excludeEverything}>
+            <Text style={styles.buttonText}>Apagar tudo</Text>
+          </TouchableOpacity>
         </View>
-        {/* Modern Card Form Layout */}
-        <StatusBar style="auto" />
       </View>
-    </ScrollView>
+
+      <ScrollView style={{ width: '92%', marginTop: 12 }}>
+        {registers.map((contato, index) => (
+          <View key={contato.personalCode ?? index.toString()} style={{ marginBottom: 10 }}>
+            <View style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+              <View>
+                <Text style={{ color: '#b5c0d0', fontWeight: '700' }}>{contato.fullName}</Text>
+                <Text style={{ color: '#b5c0d0' }}>{contato.email}</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={[styles.button, { width: 90, height: 36, justifyContent: 'center', marginRight: 8 }]} onPress={() => edit(contato.personalCode)}>
+                  <Text style={styles.buttonText}>Editar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.buttonSecondary, { width: 90, height: 36, justifyContent: 'center' }]} onPress={() => removeElement(contato.personalCode)}>
+                  <Text style={styles.buttonText}>Apagar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      <StatusBar style="auto" />
+    </View>
   );
 }
