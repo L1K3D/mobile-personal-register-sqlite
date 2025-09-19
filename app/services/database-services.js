@@ -1,70 +1,88 @@
-import * as SQLite from 'expo-sqlite/next';
+import * as SQLite from 'expo-sqlite';
 
+// Abre conexão com o banco
 export async function getDbConnection() {
     const cx = await SQLite.openDatabaseAsync('dbPersonalRegister.db');
     return cx;
 }
 
-export async function createTable() {    
-    const query = `CREATE TABLE IF NOT EXISTS tbRegisters
-        (
-            personalCode TEXT NOT NULL PRIMARY KEY,
-            fullName TEXT NOT NULL,
-            email TEXT NOT NULL,
-            password TEXT NOT NULL          
-        )`;
-    var cx = await getDbConnection();
-    await cx.execAsync(query);   
-    await cx.closeAsync() ;
-};
+// Cria tabela se não existir
+export async function createTable() {
+    const query = `
+    CREATE TABLE IF NOT EXISTS tbRegisters (
+      personalCode TEXT NOT NULL PRIMARY KEY,
+      fullName TEXT NOT NULL,
+      email TEXT NOT NULL,
+      password TEXT NOT NULL
+    )
+  `;
+    const cx = await getDbConnection();
+    await cx.execAsync(query);
+    await cx.closeAsync();
+}
 
+// Retorna todos os registros
 export async function getAllData() {
+    const cx = await getDbConnection();
+    const registers = await cx.getAllAsync('SELECT * FROM tbRegisters');
+    await cx.closeAsync();
 
-    var result = []
-    var dbCx = await getDbConnection();
-    const registers = await dbCx.getAllAsync('SELECT * FROM tbRegisters');
-    await dbCx.closeAsync() ;
-
-    for (const register of registers) {        
-        let obj = {
-            personalCode: register.personalCode,
-            fullName: register.fullName,
-            email: register.email,
-            password: register.password            
-        }
-        result.push(obj);
-    }
-
-    return result;
+    return registers.map(register => ({
+        personalCode: register.personalCode,
+        fullName: register.fullName,
+        email: register.email,
+        password: register.password
+    }));
 }
 
-export async function addRegister(register) {    
-    let dbCx = await getDbConnection();    
-    let query = 'INSERT INTO tbRegisters (personalCode, fullName, email, password values (?,?,?,?)';
-    const result = await dbCx.runAsync(query, [register.personalCode, register.fullName, register.email, register.password]);    
-    await dbCx.closeAsync() ;    
-    return result.changes == 1;    
+// Adiciona um registro
+export async function addRegister(register) {
+    const cx = await getDbConnection();
+    const query = `
+    INSERT INTO tbRegisters (personalCode, fullName, email, password)
+    VALUES (?, ?, ?, ?)
+  `;
+    const result = await cx.runAsync(query, [
+        register.personalCode,
+        register.fullName,
+        register.email,
+        register.password
+    ]);
+    await cx.closeAsync();
+    return result.changes === 1;
 }
 
+// Atualiza um registro existente
 export async function changeRegister(register) {
-    let dbCx = await getDbConnection();
-    let query = 'UPDATE tbRegisters set fullName=?, email=?, password=? WHERE personalCode=?';
-    const result = await dbCx.runAsync(query, [register.fullName, register.email, register.password, register.personalCode]);
-    await dbCx.closeAsync() ;
-    return result.changes == 1;
+    const cx = await getDbConnection();
+    const query = `
+    UPDATE tbRegisters
+    SET fullName = ?, email = ?, password = ?
+    WHERE personalCode = ?
+  `;
+    const result = await cx.runAsync(query, [
+        register.fullName,
+        register.email,
+        register.password,
+        register.personalCode
+    ]);
+    await cx.closeAsync();
+    return result.changes === 1;
 }
 
+// Deleta um registro pelo código
 export async function deleteRegister(personalCode) {
-    let dbCx = await getDbConnection();
-    let query = 'DELETE FROM tbRegisters WHERE personalCode=?';
-    const result = await dbCx.runAsync(query, personalCode);
-    await dbCx.closeAsync() ;
-    return result.changes == 1;    
+    const cx = await getDbConnection();
+    const query = 'DELETE FROM tbRegisters WHERE personalCode = ?';
+    const result = await cx.runAsync(query, [personalCode]);
+    await cx.closeAsync();
+    return result.changes === 1;
 }
 
+// Deleta todos os registros
 export async function deleteAllRegisters() {
-    let dbCx = await getDbConnection();
-    let query = 'DELETE FROM tbRegisterss';    
-    await dbCx.execAsync(query);    
-    await dbCx.closeAsync() ;
+    const cx = await getDbConnection();
+    const query = 'DELETE FROM tbRegisters';
+    await cx.execAsync(query);
+    await cx.closeAsync();
 }

@@ -1,23 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import {
-  Alert,
-  Image,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ScrollView,
-  StyleSheet,
-  Keyboard
-} from "react-native";
-import styles from "./styles";
+import { Alert, Text, TextInput, TouchableOpacity, View, ScrollView, Keyboard, Image } from "react-native";
+import styles from "./styles/styles";
+import Register from "./components/register/index";
 import * as DbService from "./services/database-services";
-import { keyBy } from "lodash";
-//import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
-  // State variables
   const [personalCode, setPersonalCode] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -64,10 +52,7 @@ export default function App() {
   async function save() {
 
     // Validation: Personal code must be greater than 0
-    if (!personalCode || isNaN(personalCode) || Number(personalCode) <= 0) {
-      Alert.alert('Personal code must be a number greater than 0.');
-      return;
-    }
+      // personalCode is generated automatically when creating a new register
 
     // Validation: Name is required
     if (!fullName || fullName.trim().length === 0) {
@@ -135,7 +120,7 @@ export default function App() {
       clearFields();
       await loadData();
     } catch (e) {
-      Alert.alert(e);
+      Alert.alert(e.toString());
     }
   }
 
@@ -169,7 +154,7 @@ export default function App() {
       await DbService.deleteAllRegisters();
       await loadData();
     } catch (e) {
-      Alert.alert(e)
+      Alert.alert(e.toString());
     }
   }
 
@@ -212,65 +197,106 @@ export default function App() {
       await loadData();
       Alert.alert('Register deleted sucessfully!');
     } catch (e) {
-      Alert.alert(e);
+      Alert.alert(e.toString());
     }
   }
 
-  return (
+return (
     <View style={styles.container}>
-      <Text style={styles.tituloPrincipal}>Agenda de Contatos - v1.0</Text>
+      <Text style={styles.tituloPrincipal}>Create a user registration, persisting data on the device</Text>
       <Text />
       <Text />
 
-      <View style={[styles.card, { width: '92%', paddingVertical: 18 }]}>        
-        <Text style={styles.label}>Nome</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={setFullName}
-          value={fullName}
-        />
+      <View style={styles.card}>
+        {/* Code is generated automatically; user cannot edit it */}
 
-        <Text style={styles.label}>Telefone</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={setEmail}
-          value={email}
-          keyboardType='phone-pad'
-        />
+        <View style={styles.formRow}>
+          <View style={styles.formCol}>
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter name"
+              placeholderTextColor="#b5c0d0"
+              value={fullName}
+              onChangeText={setFullName}
+            />
+          </View>
 
-        <View style={[styles.buttonRow, { marginTop: 8 }]}>          
+          <View style={styles.formCol}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter email"
+              placeholderTextColor="#b5c0d0"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
+        </View>
+
+        <View style={styles.formRow}>
+          <View style={styles.formCol}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="****"
+              placeholderTextColor="#b5c0d0"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
+          <View style={styles.formCol}>
+            <Text style={styles.label}>Confirm password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="****"
+              placeholderTextColor="#b5c0d0"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+          </View>
+        </View>
+
+        <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.button} onPress={save}>
-            <Text style={styles.buttonText}>Salvar</Text>
+            <Text style={styles.buttonText}>Save</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={clearFields}>
-            <Text style={styles.buttonText}>Cancelar</Text>
+          <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={clearFields}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.buttonRow, { marginTop: 12 }]}> 
+          <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={effectiveExclusion}>
+            <Text style={styles.buttonText}>Delete all</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={excludeEverything}>
-            <Text style={styles.buttonText}>Apagar tudo</Text>
+          <TouchableOpacity style={styles.button} onPress={loadData}>
+            <Text style={styles.buttonText}>Load</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView style={{ width: '92%', marginTop: 12 }}>
-        {registers.map((contato, index) => (
-          <View key={contato.personalCode ?? index.toString()} style={{ marginBottom: 10 }}>
-            <View style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-              <View>
-                <Text style={{ color: '#b5c0d0', fontWeight: '700' }}>{contato.fullName}</Text>
-                <Text style={{ color: '#b5c0d0' }}>{contato.email}</Text>
-              </View>
+      <ScrollView style={{ width: '94%', marginTop: 12 }}>
+        {registers.map((reg, index) => (
+          <View key={reg.personalCode ?? index.toString()} style={{ backgroundColor: '#0f1620', padding: 12, marginBottom: 8, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#9be7c4', fontWeight: '700', fontSize: 16 }}>{reg.fullName}</Text>
+              <Text style={{ color: '#b5c0d0' }}>{reg.email}</Text>
+            </View>
 
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={[styles.button, { width: 90, height: 36, justifyContent: 'center', marginRight: 8 }]} onPress={() => edit(contato.personalCode)}>
-                  <Text style={styles.buttonText}>Editar</Text>
-                </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity onPress={() => edit(reg.personalCode)} style={{ marginRight: 12 }}>
+                <Image source={require('./assets/app/edit.png')} style={{ width: 22, height: 22 }} />
+              </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.buttonSecondary, { width: 90, height: 36, justifyContent: 'center' }]} onPress={() => removeElement(contato.personalCode)}>
-                  <Text style={styles.buttonText}>Apagar</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity onPress={() => removeElement(reg.personalCode)}>
+                <Image source={require('./assets/app/delete.png')} style={{ width: 22, height: 22 }} />
+              </TouchableOpacity>
             </View>
           </View>
         ))}
